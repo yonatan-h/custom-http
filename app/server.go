@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	// Uncomment this block to pass the first stage
 	"net"
 	"os"
@@ -25,6 +26,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+	readBuffer := make([]byte, 1000)
+	_, err2 := con.Read(readBuffer)
+	if err2 != nil {
+		fmt.Println("Error reading req", err.Error())
+		os.Exit(1)
+	}
+	reqString := string(readBuffer)
+	splits := strings.Split(reqString, "\r\n") //Get /app HTTP/1.1 ...headers
+	splits = strings.Split(splits[0], " ")
+	path := splits[1]
+	if path == "/" {
+		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+	} else {
+		con.Write([]byte("HTTP/1.1 400 Not Found\r\n\r\n"))
+	}
 
 }
