@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+
 	// Uncomment this block to pass the first stage
 	"net"
 	"os"
@@ -36,10 +37,8 @@ func main() {
 	splits := strings.Split(reqString, "\r\n") //Get /app HTTP/1.1 ...headers
 	splits = strings.Split(splits[0], " ")
 	path := splits[1]
-	if path == "/" {
-		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-	} else {
-		con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
-	}
-
+	splits = strings.Split(path, "/")
+	echo := splits[2]
+	resString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(echo), echo)
+	con.Write([]byte(resString))
 }
