@@ -39,7 +39,7 @@ func main() {
 	if path == "/" {
 		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
 	} else {
-		con.Write([]byte("HTTP/1.1 400 Not Found\r\n\r\n"))
+		con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 	}
 
 }
