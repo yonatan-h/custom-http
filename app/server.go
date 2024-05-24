@@ -39,6 +39,10 @@ func main() {
 	path := splits[1]
 
 	splits = strings.Split(path, "/")
+	if path == "/" {
+		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+		return
+	}
 	if len(splits) != 3 || splits[1] != "echo" {
 		con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 		return
