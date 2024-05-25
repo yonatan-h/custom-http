@@ -9,11 +9,22 @@ import (
 	"os"
 )
 
-func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	fmt.Println("Logs from your program will appear here!")
+func getFile(folderPath string, fileName string) ([]byte, error) {
+	path := folderPath + "/" + fileName
+	fmt.Println("looking for", path)
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
 
-	// Uncomment this block to pass the first stage
+	fmt.Println(string(content))
+	return content, nil
+
+}
+
+func main() {
+
+	fmt.Println("Logs from your program will appear here!")
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -32,6 +43,10 @@ func main() {
 }
 
 func handleConnection(con net.Conn) {
+	folderPath := os.Args[1]
+
+	fileName := "codecrafters.yml"
+	getFile(folderPath, fileName)
 
 	readBuffer := make([]byte, 1000)
 	_, err2 := con.Read(readBuffer)
@@ -50,6 +65,18 @@ func handleConnection(con net.Conn) {
 	splits = strings.Split(path, "/")
 	if path == "/" {
 		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+		return
+	}
+	if strings.HasPrefix(path, "/files") {
+		fileName := strings.Split(path, "/")[2]
+		file, err := getFile(folderPath, fileName)
+		length := len(string(file))
+		if err == nil {
+			reqString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", length, string(file))
+			con.Write([]byte(reqString))
+		} else {
+			con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+		}
 		return
 	}
 
