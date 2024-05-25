@@ -21,14 +21,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	listenLoop := 1
-	for i := 0; i < listenLoop; i++ {
+	for {
 		con, err := l.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		handleConnection(con)
+		go handleConnection(con)
 	}
 }
 
