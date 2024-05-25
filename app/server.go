@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	// Uncomment this block to pass the first stage
@@ -80,7 +81,7 @@ func handleConnection(con net.Conn) {
 		fileName := strings.Split(path, "/")[2]
 		folderPath := os.Args[2]
 		if method == "POST" {
-			body, err := extractBody(reqString)
+			body, err := extractBody(reqString, headers)
 			if err != nil {
 				fmt.Println("could not extract body", err)
 				os.Exit(1)
@@ -143,7 +144,13 @@ func extractHeaders(reqString string) map[string]string {
 
 }
 
-func extractBody(reqString string) ([]byte, error) {
+func extractBody(reqString string, headers map[string]string) ([]byte, error) {
 	splits := strings.Split(reqString, "\r\n")
-	return []byte(splits[len(splits)-1]), nil
+	body := splits[len(splits)-1]
+	contentLength, err := strconv.Atoi(headers["Content-Length"])
+	if err != nil {
+		return []byte(""), err
+	}
+	body = body[:contentLength]
+	return []byte(body), nil
 }
