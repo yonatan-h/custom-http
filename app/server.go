@@ -68,6 +68,7 @@ func handleConnection(con net.Conn) {
 	}
 	if strings.HasPrefix(path, "/files") {
 		// folderPath := strings.Split(os.Args[1], "--directory")[1]
+		fmt.Println(os.Args)
 		folderPath := os.Args[2]
 
 		fileName := strings.Split(path, "/")[2]
