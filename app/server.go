@@ -70,7 +70,7 @@ func handleConnection(con net.Conn) {
 		folderPath := strings.Split(os.Args[1], "--directory")[1]
 
 		fileName := strings.Split(path, "/")[2]
-		fmt.Println("dir is", folderPath, "file name is", fileName)
+		fmt.Println("DIR IS", folderPath, "FILE NAME IS", fileName)
 		file, err := getFile(folderPath, fileName)
 		fmt.Println("file is ", string(file))
 		length := len(string(file))
