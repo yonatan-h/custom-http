@@ -24,6 +24,9 @@ func getFile(folderPath string, fileName string) ([]byte, error) {
 
 func main() {
 
+	// folderPath := strings.Split(os.Args[1], "--directory")[1]
+	// fmt.Println("folder path is", folderPath)
+
 	fmt.Println("Logs from your program will appear here!")
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
@@ -43,10 +46,6 @@ func main() {
 }
 
 func handleConnection(con net.Conn) {
-	folderPath := os.Args[1]
-
-	fileName := "codecrafters.yml"
-	getFile(folderPath, fileName)
 
 	readBuffer := make([]byte, 1000)
 	_, err2 := con.Read(readBuffer)
@@ -68,6 +67,8 @@ func handleConnection(con net.Conn) {
 		return
 	}
 	if strings.HasPrefix(path, "/files") {
+		folderPath := strings.Split(os.Args[1], "--directory")[1]
+
 		fileName := strings.Split(path, "/")[2]
 		fmt.Println("dir is", folderPath, "file name is", fileName)
 		file, err := getFile(folderPath, fileName)
