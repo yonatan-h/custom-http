@@ -73,11 +73,7 @@ func handleConnection(con net.Conn) {
 
 	splits = strings.Split(path, "/")
 	if path == "/" {
-		if headers["accept-encoding"] == "gzip" {
-			con.Write([]byte("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\n\r\nabc"))
-		} else {
-			con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-		}
+		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
 		return
 	}
 	if strings.HasPrefix(path, "/files") {
@@ -124,14 +120,22 @@ func handleConnection(con net.Conn) {
 		return
 	}
 
-	if len(splits) != 3 || splits[1] != "echo" {
-		con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+	if len(splits) == 3 && splits[1] == "echo" {
+
+		echo := splits[2]
+		if headers["accept-encoding"] == "gzip" {
+			resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\nContent-Type: text/plain\r\n\r\nabc"
+			con.Write([]byte(resString))
+		} else {
+			resString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(echo), echo)
+			con.Write([]byte(resString))
+		}
+
 		return
 	}
 
-	echo := splits[2]
-	resString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(echo), echo)
-	con.Write([]byte(resString))
+	con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+
 }
 
 func extractHeaders(reqString string) map[string]string {
