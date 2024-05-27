@@ -129,13 +129,10 @@ func handleConnection(con net.Conn) {
 		encodings := strings.Split(headers["accept-encoding"], ", ")
 		for _, encoding := range encodings {
 			if encoding == "gzip" {
-				zippedEcho, err := gzipCompress(echo)
-				if err != nil {
-					fmt.Println("cant compress", err)
-					os.Exit(1)
-				}
-				resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\nContent-Type: text/plain\r\n\r\n%s"
-				con.Write([]byte(fmt.Sprintf(resString, len(zippedEcho), zippedEcho)))
+				zippedEcho := gzipCompress(echo)
+				resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\nContent-Type: text/plain\r\n\r\n"
+				resBytes := append([]byte(fmt.Sprintf(resString, len(zippedEcho))), zippedEcho...)
+				con.Write(resBytes)
 				return
 			}
 		}
@@ -150,17 +147,37 @@ func handleConnection(con net.Conn) {
 
 }
 
-func gzipCompress(input string) (string, error) {
+func gzipCompress(input string) []byte {
 	var buffer bytes.Buffer
 	writer := gzip.NewWriter(&buffer)
-	defer writer.Close()
 
 	_, err := writer.Write([]byte(input))
+	writer.Close()
+
+	fmt.Println("written buffer is", buffer, buffer.String())
 	if err != nil {
-		return "", err
+		println("Cant write", err)
+		os.Exit(1)
 	}
-	compressed := hex.EncodeToString(buffer.Bytes())
-	return compressed, nil
+
+	cBytes := buffer.Bytes()
+	fmt.Println("compressed raw is", string(cBytes))
+	compressed := hex.EncodeToString(cBytes)
+	fmt.Println("Compressed hex is ", compressed)
+
+	reader, err2 := gzip.NewReader(&buffer)
+	if err2 != nil {
+		fmt.Println("cant create read", err)
+		os.Exit(1)
+	}
+	read := make([]byte, 1000)
+	num, err3 := reader.Read(read)
+	if err3 != nil && num == 0 {
+		fmt.Println("catn read", err3)
+		os.Exit(1)
+	}
+	fmt.Println("Decompressed is", string(read))
+	return cBytes
 
 }
 
