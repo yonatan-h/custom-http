@@ -73,7 +73,11 @@ func handleConnection(con net.Conn) {
 
 	splits = strings.Split(path, "/")
 	if path == "/" {
-		con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+		if headers["accept-encoding"] == "gzip" {
+			con.Write([]byte("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\n\r\nabc"))
+		} else {
+			con.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+		}
 		return
 	}
 	if strings.HasPrefix(path, "/files") {
@@ -114,7 +118,7 @@ func handleConnection(con net.Conn) {
 	}
 
 	if path == "/user-agent" {
-		userAgent := headers["User-Agent"]
+		userAgent := headers["user-agent"]
 		resString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(userAgent), userAgent)
 		con.Write([]byte(resString))
 		return
@@ -137,7 +141,8 @@ func extractHeaders(reqString string) map[string]string {
 	for i := 1; i < len(splits)-2; i++ {
 		headerString := splits[i]
 		keyAndValue := strings.Split(headerString, ": ")
-		headers[keyAndValue[0]] = keyAndValue[1]
+
+		headers[strings.ToLower(keyAndValue[0])] = keyAndValue[1]
 	}
 
 	return headers
@@ -147,7 +152,7 @@ func extractHeaders(reqString string) map[string]string {
 func extractBody(reqString string, headers map[string]string) ([]byte, error) {
 	splits := strings.Split(reqString, "\r\n")
 	body := splits[len(splits)-1]
-	contentLength, err := strconv.Atoi(headers["Content-Length"])
+	contentLength, err := strconv.Atoi(headers["content-length"])
 	if err != nil {
 		return []byte(""), err
 	}
