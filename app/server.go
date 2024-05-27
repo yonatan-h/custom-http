@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"strconv"
 	"strings"
@@ -126,8 +128,13 @@ func handleConnection(con net.Conn) {
 		encodings := strings.Split(headers["accept-encoding"], ", ")
 		for _, encoding := range encodings {
 			if encoding == "gzip" {
-				resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\nContent-Type: text/plain\r\n\r\nabc"
-				con.Write([]byte(resString))
+				zippedEcho, err := gzipCompress(echo)
+				if err != nil {
+					fmt.Println("cant compress", err)
+					os.Exit(1)
+				}
+				resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\nContent-Type: text/plain\r\n\r\n%s"
+				con.Write([]byte(fmt.Sprintf(resString, len(zippedEcho), zippedEcho)))
 				return
 			}
 		}
@@ -139,6 +146,20 @@ func handleConnection(con net.Conn) {
 	}
 
 	con.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+
+}
+
+func gzipCompress(input string) (string, error) {
+	var buffer bytes.Buffer
+	writer := gzip.NewWriter(&buffer)
+	defer writer.Close()
+
+	_, err := writer.Write([]byte(input))
+	if err != nil {
+		return "", err
+	}
+	compressed := buffer.String()
+	return compressed, nil
 
 }
 
