@@ -123,13 +123,17 @@ func handleConnection(con net.Conn) {
 	if len(splits) == 3 && splits[1] == "echo" {
 
 		echo := splits[2]
-		if headers["accept-encoding"] == "gzip" {
-			resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\nContent-Type: text/plain\r\n\r\nabc"
-			con.Write([]byte(resString))
-		} else {
-			resString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(echo), echo)
-			con.Write([]byte(resString))
+		encodings := strings.Split(headers["accept-encoding"], ", ")
+		for _, encoding := range encodings {
+			if encoding == "gzip" {
+				resString := "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\nContent-Type: text/plain\r\n\r\nabc"
+				con.Write([]byte(resString))
+				return
+			}
 		}
+
+		resString := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(echo), echo)
+		con.Write([]byte(resString))
 
 		return
 	}
