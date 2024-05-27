@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -158,7 +159,7 @@ func gzipCompress(input string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	compressed := buffer.String()
+	compressed := hex.EncodeToString(buffer.Bytes())
 	return compressed, nil
 
 }
